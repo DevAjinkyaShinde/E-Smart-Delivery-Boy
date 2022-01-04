@@ -1,0 +1,114 @@
+{
+  "project_info": {
+    "project_number": "651536598413",
+    "firebase_url": "https://e-smart-restaurant-default-rtdb.firebaseio.com",
+    "project_id": "e-smart-restaurant",
+    "storage_bucket": "e-smart-restaurant.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651536598413:android:5e7720490632da0f5569c4",
+        "android_client_info": {
+          "package_name": "com.efficacious.e_smartdeliveryboy"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651536598413-j5cmlbv15u5cvuhlrfg34ugb1cs85avn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDguaOOAayfRWzR9gnEeB8W2yYyvzOawig"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651536598413-j5cmlbv15u5cvuhlrfg34ugb1cs85avn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651536598413:android:86b98e6dddabb9335569c4",
+        "android_client_info": {
+          "package_name": "com.efficacious.e_smartsrestaurant"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651536598413-b5tvfs41t1e73d582gg1bfgsov04bdq4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.efficacious.e_smartsrestaurant",
+            "certificate_hash": "211f239090956880a153cdcb93629e84b310fb81"
+          }
+        },
+        {
+          "client_id": "651536598413-j5cmlbv15u5cvuhlrfg34ugb1cs85avn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDguaOOAayfRWzR9gnEeB8W2yYyvzOawig"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651536598413-j5cmlbv15u5cvuhlrfg34ugb1cs85avn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:651536598413:android:f6d4c1d06d3616645569c4",
+        "android_client_info": {
+          "package_name": "com.efficacious.restaurantuserapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "651536598413-onhvpimk8pc675v44v06g77r6ome4ar4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.efficacious.restaurantuserapp",
+            "certificate_hash": "211f239090956880a153cdcb93629e84b310fb81"
+          }
+        },
+        {
+          "client_id": "651536598413-j5cmlbv15u5cvuhlrfg34ugb1cs85avn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDguaOOAayfRWzR9gnEeB8W2yYyvzOawig"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "651536598413-j5cmlbv15u5cvuhlrfg34ugb1cs85avn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
