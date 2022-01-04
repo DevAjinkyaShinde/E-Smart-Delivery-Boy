@@ -3,6 +3,7 @@ package com.efficacious.e_smartdeliveryboy.Activity;
 import static android.content.ContentValues.TAG;
 
 import androidx.annotation.NonNull;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
 import android.Manifest;
@@ -11,18 +12,19 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.efficacious.e_smartdeliveryboy.R;
 import com.efficacious.e_smartdeliveryboy.databinding.ActivityMapsBinding;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
-import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
@@ -35,6 +37,12 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationListener {
 
@@ -43,6 +51,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     MapView map;
     String lat,log;
     FusedLocationProviderClient fusedLocationProviderClient;
+    private LocationManager manager;
+    private static int MIN_TIME = 1000; // 1 sec
+    private static int MIN_DISTANCE = 1; // 1 meter
+    DatabaseReference databaseReference;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,7 +64,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         map.getMapAsync(this);
         map.onCreate(savedInstanceState);
         fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this);
+
+        databaseReference = FirebaseDatabase.getInstance().getReference().child("User-101");
     }
+
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
@@ -60,11 +75,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
 //        mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(43.1, -87.9)));
 
-//        LatLng latLng = new LatLng(18.9988858,73.1196647 );
-        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(18.9988858,73.1196647 ), 10.0f));
-//        mMap.addMarker(new MarkerOptions().position(latLng).title("My Location"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-//        mMap.setMinZoomPreference(70);
+        LatLng latLng = new LatLng(18.9988858,73.1196647 );
+//        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(new LatLng(18.9988858,73.1196647 ), 10.0f));
+        mMap.addMarker(new MarkerOptions().position(latLng).title("My Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
+        mMap.setMinZoomPreference(70);
         mMap.setMapType(GoogleMap.MAP_TYPE_NORMAL);
     }
 
@@ -93,9 +108,15 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 @Override
                 public void onComplete(@NonNull Task<Location> task) {
                     Location location = task.getResult();
+
                     if (location!=null){
                         lat = String.valueOf(location.getLatitude());
                         log = String.valueOf(location.getLongitude());
+                        HashMap<Object,String > map = new HashMap<>();
+                        map.put("lat",lat);
+                        map.put("log",log);
+                        databaseReference.setValue(map);
+
 //                        SharedPreferences sharedPreferences = getSharedPreferences("Login",MODE_PRIVATE);
 //                        userDataBase.dao().mapLatLog(lat,log,sharedPreferences.getString("password",null));
 
@@ -113,7 +134,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                                 super.onLocationResult(locationResult);
 
                                 Location location1 = locationResult.getLastLocation();
-                                Log.d(TAG, "long & lat : " + location1.getLongitude() + " " + location1.getLatitude() );
+                               // Log.d(TAG, "long & lat : " + location1.getLongitude() + " " + location1.getLatitude() );
                             }
                         };
 
@@ -129,6 +150,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     @Override
     public void onLocationChanged(@NonNull Location location) {
+        if (location!=null){
+            Log.d(TAG, "long & lat : " + location.getLongitude() + " " + location.getLatitude() );
+        }else {
+            Toast.makeText(getApplicationContext(), "No Location", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public void onLocationChanged(@NonNull List<Location> locations) {
+
+    }
+
+    @Override
+    public void onFlushComplete(int requestCode) {
+
+    }
+
+    @Override
+    public void onStatusChanged(String provider, int status, Bundle extras) {
+
+    }
+
+    @Override
+    public void onProviderEnabled(@NonNull String provider) {
+
+    }
+
+    @Override
+    public void onProviderDisabled(@NonNull String provider) {
 
     }
 
