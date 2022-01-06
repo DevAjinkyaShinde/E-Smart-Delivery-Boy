@@ -133,6 +133,7 @@ public class LoginOtpActivity extends AppCompatActivity {
                         SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(Constant.USER_DATA_SHARED_PREF,0);
                         SharedPreferences.Editor editor = sharedPreferences.edit();
                         editor.putBoolean(Constant.LOGGED_IN,true);
+                        editor.putString(Constant.MOBILE_NUMBER,MobileNumber);
                         editor.apply();
                         editor.commit();
 
@@ -140,16 +141,6 @@ public class LoginOtpActivity extends AppCompatActivity {
                         intent.putExtra("Mobile",MobileNumber);
                         startActivity(intent);
                         finish();
-
-//                        firebaseFirestore.collection("UserData")
-//                                .document(firebaseAuth.getCurrentUser().getUid())
-//                                .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
-//                            @Override
-//                            public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-//                                boolean addressFound = task.getResult().getBoolean(Constant.ADDRESS_AVAILABLE);
-//                                getUserDetails(addressFound);
-//                            }
-//                        });
                     }
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -162,58 +153,6 @@ public class LoginOtpActivity extends AppCompatActivity {
             }
         });
     }
-
-//    private void getUserDetails(boolean addressFound) {
-//        if (!checkInternetConnection.isConnectingToInternet()){
-//            startActivity(new Intent(LoginOtpActivity.this,NoConnectionActivity.class));
-//            finish();
-//        }else{
-//            try {
-//                Call<GetUserDetailResponse> call = RetrofitClient
-//                        .getInstance()
-//                        .getApi()
-//                        .getUserDetails("select","1",WithoutCCMobile);
-//
-//
-//                call.enqueue(new Callback<GetUserDetailResponse>() {
-//                    @SuppressLint("SetTextI18n")
-//                    @Override
-//                    public void onResponse(Call<GetUserDetailResponse> call, Response<GetUserDetailResponse> response) {
-//                        if (response.isSuccessful()){
-//                            List<GetUserDetails> getUserDetails = response.body().getGetUserDetails();
-//
-//                            UserDetail userDetail = new UserDetail(getUserDetails.get(0).getRegisterId(),getUserDetails.get(0).getMobileNo(),
-//                                    true,getUserDetails.get(0).getFirstName(),"",WithoutCCMobile);
-//                            List<UserDetail> userDetails = new ArrayList<>();
-//                            userDetails.addAll(Collections.singleton(userDetail));
-//                            sharedPrefManger.saveUserDetail(userDetails);
-//
-//                            SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences(Constant.USER_DATA_SHARED_PREF,0);
-//                            SharedPreferences.Editor editor;
-//                            editor = sharedPreferences.edit();
-//                            editor.putBoolean(Constant.ADDRESS_AVAILABLE,addressFound);
-//                            editor.apply();
-//                            editor.commit();
-//
-//                            Intent intent = new Intent(LoginOtpActivity.this, MainActivity.class);
-//                            intent.putExtra("Mobile",MobileNumber);
-//                            startActivity(intent);
-//                            finish();
-//                        }
-//                    }
-//
-//                    @Override
-//                    public void onFailure(Call<GetUserDetailResponse> call, Throwable t) {
-//                        Toast.makeText(getApplicationContext(), "Error : " + t.getMessage(), Toast.LENGTH_SHORT).show();
-//                    }
-//                });
-//            }catch (Exception e){
-//                Toast.makeText(getApplicationContext(), "Error : " + e.getMessage(), Toast.LENGTH_SHORT).show();
-//            }
-//        }
-//    }
-
-
 
     private void countDown() {
         new CountDownTimer(50000, 1000){
