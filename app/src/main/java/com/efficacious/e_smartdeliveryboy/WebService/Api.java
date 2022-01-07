@@ -1,5 +1,6 @@
 package com.efficacious.e_smartdeliveryboy.WebService;
 
+import com.efficacious.e_smartdeliveryboy.model.GetFCMTokenResponse;
 import com.efficacious.e_smartdeliveryboy.model.GetUserDetailResponse;
 import com.efficacious.e_smartdeliveryboy.model.UpdateStatusDetails;
 
@@ -22,5 +23,12 @@ public interface Api {
     Call<ResponseBody> updateStatus(
             @Query("Command") String command,
             @Body UpdateStatusDetails updateStatusDetails
+    );
+
+    @GET("GetFCM")
+    Call<GetFCMTokenResponse> getFCMToken(
+            @Query("Command") String command,
+            @Query("Res_Id") String ResId,
+            @Query("Status") String Status
     );
 }

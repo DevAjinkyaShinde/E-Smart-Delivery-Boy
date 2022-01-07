@@ -20,8 +20,14 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.efficacious.e_smartdeliveryboy.Notification.APIService;
+import com.efficacious.e_smartdeliveryboy.Notification.Client;
+import com.efficacious.e_smartdeliveryboy.Notification.Data;
+import com.efficacious.e_smartdeliveryboy.Notification.NotificationSender;
 import com.efficacious.e_smartdeliveryboy.R;
 import com.efficacious.e_smartdeliveryboy.WebService.RetrofitClient;
+import com.efficacious.e_smartdeliveryboy.model.GetFCM;
+import com.efficacious.e_smartdeliveryboy.model.GetFCMTokenResponse;
 import com.efficacious.e_smartdeliveryboy.model.GetUserDetailResponse;
 import com.efficacious.e_smartdeliveryboy.model.GetUserDetails;
 import com.efficacious.e_smartdeliveryboy.model.NewTaskData;
@@ -64,6 +70,7 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
         holder.mobileNumber.setText(newTaskData.get(position).getMobileNumber());
         holder.userName.setText(newTaskData.get(position).getUserName());
 
+        //fetch address here
         try {
             Call<GetUserDetailResponse> call = RetrofitClient
                     .getInstance()
@@ -100,7 +107,7 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
             public void onClick(View view) {
                 FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
                 HashMap<String,Object> map = new HashMap<>();
-                map.put("OrderId",newTaskData.get(position).getOrderId());
+                map.put("OrderId",Integer.parseInt(newTaskData.get(position).getOrderId()));
                 map.put("TimeStamp",System.currentTimeMillis());
                 map.put("Status","Order Shipped");
                 firebaseFirestore.collection("Orders").document(newTaskData.get(position).getOrderId())
@@ -115,6 +122,46 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()){
                             Toast.makeText(context, "Request Accept..", Toast.LENGTH_SHORT).show();
+                            //send to notification to user
+                            firebaseFirestore.collection("TakeAway").document(newTaskData.get(position).getOrderId())
+                                    .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                                @Override
+                                public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                                    if (task.isSuccessful()){
+                                        String token = task.getResult().getString("FCMToken");
+                                        String title = "Your order is on the way..";
+                                        String msg = "Tap to view";
+                                        String flag = "UserHistory";
+                                        sendNotification(token,title,msg,flag);
+                                    }
+                                }
+                            });
+                            //send notification to manager
+                            try {
+                                Call<GetFCMTokenResponse> FCM_CALL = RetrofitClient
+                                        .getInstance()
+                                        .getApi()
+                                        .getFCMToken("getFCM","1","Manager");
+
+                                FCM_CALL.enqueue(new Callback<GetFCMTokenResponse>() {
+                                    @Override
+                                    public void onResponse(Call<GetFCMTokenResponse> call, Response<GetFCMTokenResponse> response) {
+                                        List<GetFCM> getFCM = response.body().getGetFCM();
+                                        String FCMToken = getFCM.get(0).getVchFcmToken();
+                                        String Title = "Takeaway order #" + newTaskData.get(position).getOrderId() + " accept request";
+                                        String Msg = "Tap to view";
+                                        String flag = "TakeAwayHistory";
+                                        sendNotification(FCMToken,Title,Msg,flag);
+                                    }
+
+                                    @Override
+                                    public void onFailure(Call<GetFCMTokenResponse> call, Throwable t) {
+
+                                    }
+                                });
+                            }catch (Exception e){
+
+                            }
                             holder.btnCancel.setVisibility(View.GONE);
                             holder.btnAccept.setVisibility(View.GONE);
                             holder.btnDirection.setVisibility(View.VISIBLE);
@@ -147,13 +194,6 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
         });
 
         FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
-        HashMap<String,Object> map = new HashMap<>();
-        map.put("OrderId",newTaskData.get(position).getOrderId());
-        map.put("TimeStamp",System.currentTimeMillis());
-        map.put("Status","Order Complete");
-        firebaseFirestore.collection("Orders").document(newTaskData.get(position).getOrderId())
-                .collection("OrderStatus")
-                .add(map);
         firebaseFirestore.collection("Orders")
                 .document(newTaskData.get(position).getOrderId())
                 .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
@@ -175,8 +215,57 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
             @Override
             public void onClick(View view) {
                 FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+
+                firebaseFirestore.collection("TakeAway").document(newTaskData.get(position).getOrderId())
+                        .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                    @Override
+                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
+                        if (task.isSuccessful()){
+                            String token = task.getResult().getString("FCMToken");
+                            String title = "Successfully delivered your order !!";
+                            String msg = "Tap to see";
+                            String flag = "UserHistory";
+                            sendNotification(token,title,msg,flag);
+                        }
+                    }
+                });
+
+                try {
+                    Call<GetFCMTokenResponse> FCM_CALL = RetrofitClient
+                            .getInstance()
+                            .getApi()
+                            .getFCMToken("getFCM","1","Manager");
+
+                    FCM_CALL.enqueue(new Callback<GetFCMTokenResponse>() {
+                        @Override
+                        public void onResponse(Call<GetFCMTokenResponse> call, Response<GetFCMTokenResponse> response) {
+                            List<GetFCM> getFCM = response.body().getGetFCM();
+                            String FCMToken = getFCM.get(0).getVchFcmToken();
+                            Toast.makeText(context, FCMToken, Toast.LENGTH_SHORT).show();
+                            String Title = "Takeaway order #" + newTaskData.get(position).getOrderId() + " delivered.";
+                            String Msg = "Tap to view";
+                            String flag = "TakeAwayHistory";
+                            sendNotification(FCMToken,Title,Msg,flag);
+                        }
+
+                        @Override
+                        public void onFailure(Call<GetFCMTokenResponse> call, Throwable t) {
+
+                        }
+                    });
+                }catch (Exception e){
+
+                }
+
+                HashMap<String,Object> map = new HashMap<>();
+                map.put("OrderId",Integer.parseInt(newTaskData.get(position).getOrderId()));
+                map.put("TimeStamp",System.currentTimeMillis());
+                map.put("Status","Order Complete");
+                firebaseFirestore.collection("Orders").document(newTaskData.get(position).getOrderId())
+                        .collection("OrderStatus")
+                        .add(map);
                 HashMap<String, Object> update = new HashMap<>();
-                update.put("Status", "Complete");
+                update.put("Status", "Complete order");
                 UpdateStatusDetails updateStatusDetails = new UpdateStatusDetails(Integer.parseInt(newTaskData.get(position).getOrderId()), Constant.CLOSE_STATUS);
                 try {
                     Call<ResponseBody> call = RetrofitClient
@@ -217,6 +306,25 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
     @Override
     public int getItemCount() {
         return newTaskData.size();
+    }
+
+    private void sendNotification(String token, String title, String msg,String flag) {
+        Data data = new Data(title,msg,flag);
+        NotificationSender notificationSender = new NotificationSender(data,token);
+
+        APIService apiService = Client.getRetrofit().create(APIService.class);
+
+        apiService.sendNotification(notificationSender).enqueue(new Callback<ResponseBody>() {
+            @Override
+            public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+
+            }
+
+            @Override
+            public void onFailure(Call<ResponseBody> call, Throwable t) {
+
+            }
+        });
     }
 
     public void convertAddress(String address) {
