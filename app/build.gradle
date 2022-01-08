@@ -59,6 +59,7 @@ dependencies {
     annotationProcessor "android.arch.persistence.room:compiler:1.1.1"
     implementation 'com.karumi:dexter:6.2.3'
     implementation 'com.google.firebase:firebase-messaging:21.1.0'
+    implementation 'com.karumi:dexter:6.2.3'
 }
 
 apply plugin: 'com.google.gms.google-services'

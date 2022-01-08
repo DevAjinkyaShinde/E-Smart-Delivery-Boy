@@ -207,6 +207,12 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
                         holder.btnDirection.setVisibility(View.VISIBLE);
                         holder.btnComplete.setVisibility(View.VISIBLE);
                     }
+                    if (status.equalsIgnoreCase("Complete order")){
+                        holder.btnCancel.setVisibility(View.GONE);
+                        holder.btnAccept.setVisibility(View.GONE);
+                        holder.btnDirection.setVisibility(View.GONE);
+                        holder.btnComplete.setVisibility(View.GONE);
+                    }
                 }
             }
         });
@@ -253,9 +259,7 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
 
                         }
                     });
-                }catch (Exception e){
-
-                }
+                }catch (Exception e){ }
 
                 HashMap<String,Object> map = new HashMap<>();
                 map.put("OrderId",Integer.parseInt(newTaskData.get(position).getOrderId()));
@@ -284,6 +288,9 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
                                     public void onComplete(@NonNull Task<Void> task) {
                                         if (task.isSuccessful()){
                                             Toast.makeText(context, "Task complete..", Toast.LENGTH_SHORT).show();
+                                            holder.btnComplete.setVisibility(View.GONE);
+                                            holder.btnDirection.setVisibility(View.GONE);
+                                            holder.btnAccept.setVisibility(View.GONE);
                                         }
                                     }
                                 });
