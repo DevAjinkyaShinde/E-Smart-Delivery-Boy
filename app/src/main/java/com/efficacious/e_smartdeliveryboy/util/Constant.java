@@ -18,4 +18,8 @@ public class Constant {
     public static String WITHOUT_CC_MOBILE_NUMBER = "WithoutCCMobileNumber";
     public static String LOGGED_IN = "LoggedIn";
     public static String ADDRESS_AVAILABLE = "AddressAvailable";
+
+    public static final int LOCATION_SERVICE_ID = 175;
+    public static final String ACTION_START_LOCATION_SERVICE = "startLocationService";
+    public static final String ACTION_STOP_LOCATION_SERVICE = "stopLocationService";
 }

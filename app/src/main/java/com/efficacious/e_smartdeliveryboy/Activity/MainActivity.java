@@ -33,6 +33,7 @@ import com.efficacious.e_smartdeliveryboy.Adapter.NewTaskAdapter;
 import com.efficacious.e_smartdeliveryboy.R;
 import com.efficacious.e_smartdeliveryboy.model.NewTaskData;
 import com.efficacious.e_smartdeliveryboy.util.Constant;
+import com.efficacious.e_smartdeliveryboy.util.LocationService;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
@@ -161,6 +162,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
             if (checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED
                     && checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED){
                 getCurrentLocation();
+                startLocationService();
             }else {
                 requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION,
                         Manifest.permission.ACCESS_COARSE_LOCATION},44);
@@ -218,5 +220,25 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
         if (location!=null){
             getCurrentLocation();
         }
+    }
+
+    private void startLocationService(){
+        Intent intent = new Intent(this, LocationService.class);
+        intent.setAction(Constant.ACTION_START_LOCATION_SERVICE);
+        startService(intent);
+        Log.d(ContentValues.TAG,Constant.ACTION_START_LOCATION_SERVICE);
+    }
+
+    private void stopLocationService(){
+        Intent intent = new Intent(this, LocationService.class);
+        intent.setAction(Constant.ACTION_STOP_LOCATION_SERVICE);
+        startService(intent);
+        Log.d(ContentValues.TAG,Constant.ACTION_STOP_LOCATION_SERVICE);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopLocationService();
     }
 }

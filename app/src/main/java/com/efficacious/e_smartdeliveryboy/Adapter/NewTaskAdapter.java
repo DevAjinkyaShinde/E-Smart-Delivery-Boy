@@ -1,14 +1,19 @@
 package com.efficacious.e_smartdeliveryboy.Adapter;
 
+import static android.content.ContentValues.TAG;
+
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,8 +23,11 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.efficacious.e_smartdeliveryboy.Activity.MainActivity;
 import com.efficacious.e_smartdeliveryboy.Notification.APIService;
 import com.efficacious.e_smartdeliveryboy.Notification.Client;
 import com.efficacious.e_smartdeliveryboy.Notification.Data;
@@ -33,6 +41,7 @@ import com.efficacious.e_smartdeliveryboy.model.GetUserDetails;
 import com.efficacious.e_smartdeliveryboy.model.NewTaskData;
 import com.efficacious.e_smartdeliveryboy.model.UpdateStatusDetails;
 import com.efficacious.e_smartdeliveryboy.util.Constant;
+import com.efficacious.e_smartdeliveryboy.util.LocationService;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -88,6 +97,7 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
                             @Override
                             public void onClick(View view) {
                                 convertAddress(Address);
+//                                startLocationService();
                             }
                         });
                     }
@@ -379,5 +389,21 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
             btnCancel = itemView.findViewById(R.id.btnCancel);
             btnComplete = itemView.findViewById(R.id.btnComplete);
         }
+    }
+
+    private void startLocationService(){
+        AppCompatActivity activity = (AppCompatActivity) context;
+        Intent intent = new Intent(context, LocationService.class);
+        intent.setAction(Constant.ACTION_START_LOCATION_SERVICE);
+        activity.startService(intent);
+        Log.d(TAG,Constant.ACTION_START_LOCATION_SERVICE);
+    }
+
+    private void stopLocationService(){
+        AppCompatActivity activity = (AppCompatActivity) context;
+        Intent intent = new Intent(context, LocationService.class);
+        intent.setAction(Constant.ACTION_STOP_LOCATION_SERVICE);
+        activity.startService(intent);
+        Log.d(TAG,Constant.ACTION_STOP_LOCATION_SERVICE);
     }
 }
