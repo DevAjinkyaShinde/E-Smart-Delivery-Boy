@@ -5,19 +5,26 @@ import static android.content.ContentValues.TAG;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
 import android.location.Address;
 import android.location.Geocoder;
 import android.net.Uri;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -162,6 +169,9 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
                                         String Msg = "Tap to view";
                                         String flag = "TakeAwayHistory";
                                         sendNotification(FCMToken,Title,Msg,flag);
+                                        newTaskData.remove(position);
+                                        notifyItemRemoved(position);
+                                        notifyItemRangeChanged(position,newTaskData.size());
                                     }
 
                                     @Override
@@ -169,13 +179,11 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
 
                                     }
                                 });
-                            }catch (Exception e){
-
-                            }
+                            }catch (Exception e){ }
                             holder.btnCancel.setVisibility(View.GONE);
                             holder.btnAccept.setVisibility(View.GONE);
-                            holder.btnDirection.setVisibility(View.VISIBLE);
-                            holder.btnComplete.setVisibility(View.VISIBLE);
+//                            holder.btnDirection.setVisibility(View.VISIBLE);
+//                            holder.btnComplete.setVisibility(View.VISIBLE);
                         }
                     }
                 });
@@ -223,6 +231,9 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
                         holder.btnDirection.setVisibility(View.GONE);
                         holder.btnComplete.setVisibility(View.GONE);
                     }
+                    if (status.equalsIgnoreCase("Request")){
+                        holder.btnAccept.setVisibility(View.VISIBLE);
+                    }
                 }
             }
         });
@@ -230,91 +241,124 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
         holder.btnComplete.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
 
-                firebaseFirestore.collection("TakeAway").document(newTaskData.get(position).getOrderId())
-                        .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
+                Dialog dialog = new Dialog(context);
+                dialog.setContentView(R.layout.confirm_id);
+                dialog.setCanceledOnTouchOutside(false);
+                dialog.getWindow().setBackgroundDrawable(new ColorDrawable(Color.TRANSPARENT));
+                dialog.show();
+                Button btnConfirmId = dialog.findViewById(R.id.btnConfirm);
+                Button btnCancel = dialog.findViewById(R.id.btnCancel);
+                EditText confirmId = dialog.findViewById(R.id.orderId);
+
+                btnCancel.setOnClickListener(new View.OnClickListener() {
                     @Override
-                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
-                        if (task.isSuccessful()){
-                            String token = task.getResult().getString("FCMToken");
-                            String title = "Successfully delivered your order !!";
-                            String msg = "Tap to see";
-                            String flag = "UserHistory";
-                            sendNotification(token,title,msg,flag);
-                        }
+                    public void onClick(View view) {
+                        dialog.dismiss();
                     }
                 });
 
-                try {
-                    Call<GetFCMTokenResponse> FCM_CALL = RetrofitClient
-                            .getInstance()
-                            .getApi()
-                            .getFCMToken("getFCM","1","Manager");
-
-                    FCM_CALL.enqueue(new Callback<GetFCMTokenResponse>() {
-                        @Override
-                        public void onResponse(Call<GetFCMTokenResponse> call, Response<GetFCMTokenResponse> response) {
-                            List<GetFCM> getFCM = response.body().getGetFCM();
-                            String FCMToken = getFCM.get(0).getVchFcmToken();
-                            Toast.makeText(context, FCMToken, Toast.LENGTH_SHORT).show();
-                            String Title = "Takeaway order #" + newTaskData.get(position).getOrderId() + " delivered.";
-                            String Msg = "Tap to view";
-                            String flag = "TakeAwayHistory";
-                            sendNotification(FCMToken,Title,Msg,flag);
-                        }
-
-                        @Override
-                        public void onFailure(Call<GetFCMTokenResponse> call, Throwable t) {
-
-                        }
-                    });
-                }catch (Exception e){ }
-
-                HashMap<String,Object> map = new HashMap<>();
-                map.put("OrderId",Integer.parseInt(newTaskData.get(position).getOrderId()));
-                map.put("TimeStamp",System.currentTimeMillis());
-                map.put("Status","Order Complete");
-                firebaseFirestore.collection("Orders").document(newTaskData.get(position).getOrderId())
-                        .collection("OrderStatus")
-                        .add(map);
-                HashMap<String, Object> update = new HashMap<>();
-                update.put("Status", "Complete order");
-                UpdateStatusDetails updateStatusDetails = new UpdateStatusDetails(Integer.parseInt(newTaskData.get(position).getOrderId()), Constant.CLOSE_STATUS);
-                try {
-                    Call<ResponseBody> call = RetrofitClient
-                            .getInstance()
-                            .getApi()
-                            .updateStatus("update", updateStatusDetails);
-
-                    call.enqueue(new Callback<ResponseBody>() {
-                        @Override
-                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
-                            if (response.isSuccessful()){
-                                firebaseFirestore.collection("Orders")
-                                        .document(newTaskData.get(position).getOrderId())
-                                        .update(update).addOnCompleteListener(new OnCompleteListener<Void>() {
+                btnConfirmId.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View view) {
+                        String ConfirmId = confirmId.getText().toString().trim();
+                        if (!TextUtils.isEmpty(ConfirmId)){
+                            if (newTaskData.get(position).getOrderId().equalsIgnoreCase(ConfirmId)){
+                                FirebaseFirestore firebaseFirestore = FirebaseFirestore.getInstance();
+                                firebaseFirestore.collection("TakeAway").document(newTaskData.get(position).getOrderId())
+                                        .get().addOnCompleteListener(new OnCompleteListener<DocumentSnapshot>() {
                                     @Override
-                                    public void onComplete(@NonNull Task<Void> task) {
+                                    public void onComplete(@NonNull Task<DocumentSnapshot> task) {
                                         if (task.isSuccessful()){
-                                            Toast.makeText(context, "Task complete..", Toast.LENGTH_SHORT).show();
-                                            holder.btnComplete.setVisibility(View.GONE);
-                                            holder.btnDirection.setVisibility(View.GONE);
-                                            holder.btnAccept.setVisibility(View.GONE);
+                                            String token = task.getResult().getString("FCMToken");
+                                            String title = "Successfully delivered your order !!";
+                                            String msg = "Tap to see";
+                                            String flag = "UserHistory";
+                                            sendNotification(token,title,msg,flag);
                                         }
                                     }
                                 });
+
+                                try {
+                                    Call<GetFCMTokenResponse> FCM_CALL = RetrofitClient
+                                            .getInstance()
+                                            .getApi()
+                                            .getFCMToken("getFCM","1","Manager");
+
+                                    FCM_CALL.enqueue(new Callback<GetFCMTokenResponse>() {
+                                        @Override
+                                        public void onResponse(Call<GetFCMTokenResponse> call, Response<GetFCMTokenResponse> response) {
+                                            List<GetFCM> getFCM = response.body().getGetFCM();
+                                            String FCMToken = getFCM.get(0).getVchFcmToken();
+                                            String Title = "Takeaway order #" + newTaskData.get(position).getOrderId() + " delivered.";
+                                            String Msg = "Tap to view";
+                                            String flag = "TakeAwayHistory";
+                                            sendNotification(FCMToken,Title,Msg,flag);
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<GetFCMTokenResponse> call, Throwable t) {
+
+                                        }
+                                    });
+                                }catch (Exception e){ }
+
+                                HashMap<String,Object> map = new HashMap<>();
+                                map.put("OrderId",Integer.parseInt(newTaskData.get(position).getOrderId()));
+                                map.put("TimeStamp",System.currentTimeMillis());
+                                map.put("Status","Order Complete");
+                                firebaseFirestore.collection("Orders").document(newTaskData.get(position).getOrderId())
+                                        .collection("OrderStatus")
+                                        .add(map);
+                                HashMap<String, Object> update = new HashMap<>();
+                                update.put("Status", "Complete order");
+                                UpdateStatusDetails updateStatusDetails = new UpdateStatusDetails(Integer.parseInt(newTaskData.get(position).getOrderId()), Constant.CLOSE_STATUS);
+                                try {
+                                    Call<ResponseBody> call = RetrofitClient
+                                            .getInstance()
+                                            .getApi()
+                                            .updateStatus("update", updateStatusDetails);
+
+                                    call.enqueue(new Callback<ResponseBody>() {
+                                        @Override
+                                        public void onResponse(Call<ResponseBody> call, Response<ResponseBody> response) {
+                                            if (response.isSuccessful()){
+                                                firebaseFirestore.collection("Orders")
+                                                        .document(newTaskData.get(position).getOrderId())
+                                                        .update(update).addOnCompleteListener(new OnCompleteListener<Void>() {
+                                                    @Override
+                                                    public void onComplete(@NonNull Task<Void> task) {
+                                                        if (task.isSuccessful()){
+                                                            Toast.makeText(context, "Task complete..", Toast.LENGTH_SHORT).show();
+                                                            holder.btnComplete.setVisibility(View.GONE);
+                                                            holder.btnDirection.setVisibility(View.GONE);
+                                                            holder.btnAccept.setVisibility(View.GONE);
+                                                            newTaskData.remove(position);
+                                                            notifyItemRemoved(position);
+                                                            notifyItemRangeChanged(position,newTaskData.size());
+                                                        }
+                                                    }
+                                                });
+                                            }
+                                        }
+
+                                        @Override
+                                        public void onFailure(Call<ResponseBody> call, Throwable t) {
+                                            Toast.makeText(context, "Api Error : " + t.getMessage(), Toast.LENGTH_SHORT).show();
+                                        }
+                                    });
+                                }catch (Exception e){ }
+                                dialog.dismiss();
                             }
+                            else{
+                                Toast.makeText(context, "Order id not match", Toast.LENGTH_SHORT).show();
+                                confirmId.setError("Invalid");
+                            }
+                        }else {
+                            confirmId.setError("Empty field");
                         }
-
-                        @Override
-                        public void onFailure(Call<ResponseBody> call, Throwable t) {
-                            Toast.makeText(context, "Api Error : " + t.getMessage(), Toast.LENGTH_SHORT).show();
-                        }
-                    });
-                }catch (Exception e){
-
-                }
+                    }
+                });
             }
         });
 
@@ -391,19 +435,4 @@ public class NewTaskAdapter extends RecyclerView.Adapter<NewTaskAdapter.ViewHold
         }
     }
 
-    private void startLocationService(){
-        AppCompatActivity activity = (AppCompatActivity) context;
-        Intent intent = new Intent(context, LocationService.class);
-        intent.setAction(Constant.ACTION_START_LOCATION_SERVICE);
-        activity.startService(intent);
-        Log.d(TAG,Constant.ACTION_START_LOCATION_SERVICE);
-    }
-
-    private void stopLocationService(){
-        AppCompatActivity activity = (AppCompatActivity) context;
-        Intent intent = new Intent(context, LocationService.class);
-        intent.setAction(Constant.ACTION_STOP_LOCATION_SERVICE);
-        activity.startService(intent);
-        Log.d(TAG,Constant.ACTION_STOP_LOCATION_SERVICE);
-    }
 }

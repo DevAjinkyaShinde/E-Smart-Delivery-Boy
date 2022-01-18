@@ -29,6 +29,8 @@ import com.google.firebase.database.FirebaseDatabase;
 
 public class LocationService extends Service {
 
+
+
     private LocationCallback locationCallback = new LocationCallback() {
         @Override
         public void onLocationResult(@NonNull LocationResult locationResult) {
@@ -49,7 +51,8 @@ public class LocationService extends Service {
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
-        throw new UnsupportedOperationException("Not yet implemented");
+//        throw new UnsupportedOperationException("Not yet implemented");
+        return null;
     }
 
     @SuppressLint("MissingPermission")
@@ -109,6 +112,7 @@ public class LocationService extends Service {
                 }
             }
         }
-        return super.onStartCommand(intent, flags, startId);
+//        return super.onStartCommand(intent, flags, startId);
+        return START_STICKY;
     }
 }

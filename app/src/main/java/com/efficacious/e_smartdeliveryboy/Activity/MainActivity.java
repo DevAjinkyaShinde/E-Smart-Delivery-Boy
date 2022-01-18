@@ -24,11 +24,16 @@ import android.os.Bundle;
 import android.os.Looper;
 import android.provider.Settings;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.PopupMenu;
 import android.widget.Switch;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.airbnb.lottie.LottieAnimationView;
 import com.efficacious.e_smartdeliveryboy.Adapter.NewTaskAdapter;
 import com.efficacious.e_smartdeliveryboy.R;
 import com.efficacious.e_smartdeliveryboy.model.NewTaskData;
@@ -42,6 +47,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.LocationSource;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.DocumentChange;
 import com.google.firebase.firestore.DocumentSnapshot;
@@ -72,6 +78,8 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     String lat,log,mobileNumber;
     FusedLocationProviderClient fusedLocationProviderClient;
     LocationManager locationManager;
+    ExtendedFloatingActionButton mBtnFilter;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -130,6 +138,42 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
 
         recyclerView = findViewById(R.id.recyclerView);
         firebaseFirestore = FirebaseFirestore.getInstance();
+        loadData("Request");
+
+        mBtnFilter = findViewById(R.id.filter);
+        mBtnFilter.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Creating the instance of PopupMenu
+                PopupMenu popup = new PopupMenu(getApplicationContext(), mBtnFilter);
+                //Inflating the Popup using xml file
+                popup.getMenuInflater().inflate(R.menu.filter_menu, popup.getMenu());
+
+                //registering popup with OnMenuItemClickListener
+                popup.setOnMenuItemClickListener(new PopupMenu.OnMenuItemClickListener() {
+                    public boolean onMenuItemClick(MenuItem item) {
+//                        Toast.makeText(getContext(),"You Clicked : " + item.getTitle(), Toast.LENGTH_SHORT).show();
+                        String status = item.getTitle().toString();
+                        if (status.equalsIgnoreCase("New Task")){
+                            loadData("Request");
+                        }else if (status.equalsIgnoreCase("Pending")){
+                            loadData("On the way");
+                        }else if (status.equalsIgnoreCase("Complete")){
+                            loadData("Complete order");
+                        }else if (status.equalsIgnoreCase("Cancel")){
+                            loadData("Cancel");
+                        }
+                        return true;
+                    }
+                });
+
+                popup.show();//showing popup menu
+
+            }
+        });
+    }
+
+    private void loadData(String status) {
         newTaskData = new ArrayList<>();
         newTaskAdapter = new NewTaskAdapter(newTaskData);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -138,14 +182,34 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
 
         Query query = firebaseFirestore.collection("Orders")
                 .whereEqualTo("DeliveryBoyId",mobileNumber)
+                .whereEqualTo("Status",status)
                 .orderBy("TimeStamp", Query.Direction.DESCENDING);
 
         query.addSnapshotListener(new EventListener<QuerySnapshot>() {
             @Override
             public void onEvent(@Nullable QuerySnapshot value, @Nullable FirebaseFirestoreException error) {
+                int count = value.size();
+                TextView text = findViewById(R.id.text);
+                text.setText(status+" (" + String.valueOf(count) + ")");
+
+                if (value.isEmpty()){
+                    ImageView lottieAnimationView =findViewById(R.id.empty);
+                    TextView textView = findViewById(R.id.emptyTxt);
+
+                    lottieAnimationView.setVisibility(View.VISIBLE);
+                    textView.setVisibility(View.VISIBLE);
+
+
+                }else {
+
+                    ImageView lottieAnimationView = findViewById(R.id.empty);
+                    TextView textView = findViewById(R.id.emptyTxt);
+
+                    lottieAnimationView.setVisibility(View.GONE);
+                    textView.setVisibility(View.GONE);
+                }
                 for (DocumentChange doc : value.getDocumentChanges()){
                     if (doc.getType() == DocumentChange.Type.ADDED){
-//                        String Id = doc.getDocument().getId();
                         NewTaskData mData = doc.getDocument().toObject(NewTaskData.class);
                         newTaskData.add(mData);
                         newTaskAdapter.notifyDataSetChanged();
@@ -168,6 +232,13 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
                         Manifest.permission.ACCESS_COARSE_LOCATION},44);
             }
         }
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        getCurrentLocation();
+        startLocationService();
     }
 
     @SuppressLint("MissingPermission")
@@ -239,6 +310,7 @@ public class MainActivity extends AppCompatActivity implements LocationListener{
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Log.d(TAG, "onDestroy: Service Stop ");
         stopLocationService();
     }
 }
